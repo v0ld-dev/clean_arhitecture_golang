@@ -1,15 +1,12 @@
 package block
 
-type Service interface {
-	GetBlockById(id int) *Block
-	GetAllBlocksById() []*Block
-}
+import "clean_arhitecture_golang/internal/adapters/api/block"
 
 type service struct {
 	storage Storage
 }
 
-func NewService(storage Storage) Service {
+func NewService(storage Storage) block.Service {
 	return  &service{storage: storage}
 }
 
