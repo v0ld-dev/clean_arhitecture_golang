@@ -8,6 +8,8 @@ services:
     networks:
       static-network:
         ipv4_address: 172.20.0.10
+    depends_on:
+      - 'mongo'
   my-project-with-air-2:
     image: cosmtrek/air
     # working_dir value has to be the same of mapped volume
@@ -17,6 +19,32 @@ services:
     networks:
       static-network:
         ipv4_address: 172.20.0.11
+    depends_on:
+      - 'mongo'
+  # MongoDB
+  mongo:
+    image: 'mongo:4.2.6-bionic'
+    container_name: mongo
+    ports:
+        - '27017:27017'
+    volumes:
+        - ./mongodata:/data/db
+    networks:
+      static-network:
+        ipv4_address: 172.20.0.17
+    restart: always
+  # Mongo Express Web-based MongoDB admin interface
+  mongo_express:
+    image: mongo-express
+    container_name: mongo_express
+    depends_on:
+        - 'mongo'
+    ports:
+        - '8081:8081'
+    networks:
+      static-network:
+        ipv4_address: 172.20.0.18
+    restart: always
 
 
 networks:
