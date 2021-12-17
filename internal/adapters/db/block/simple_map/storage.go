@@ -6,6 +6,10 @@ type bookStorage struct {
 	//client from pkg/client/mongodb/*.go
 }
 
+func NewStorage() block.Storage {
+	return &bookStorage{}
+}
+
 func (b bookStorage) GetOne(id int) *block.Block {
 	panic("implement me")
 }
