@@ -2,9 +2,8 @@ package block
 
 import (
 	"clean_arhitecture_golang/internal/adapters/api"
-	"clean_arhitecture_golang/internal/domains"
 	block2 "clean_arhitecture_golang/internal/domains/block"
-	"clean_arhitecture_golang/internal/exceptions"
+	"clean_arhitecture_golang/internal/middleware"
 	"context"
 	"encoding/json"
 	"github.com/go-playground/validator/v10"
@@ -20,7 +19,7 @@ import (
 
 const (
 	blocksURL = "/blocks"
-	addBlock = "/addBlock"
+	AddBlock  = "/addBlock"
 )
 
 type handler struct {
@@ -39,8 +38,8 @@ func (h *handler) Register(router *httprouter.Router) {
 	router.GET(blocksURL, h.GetAllBlocks)
 	//router.POST(addBlock, h.NewBlock)
 	//router.GET("testerror", h.TestError)
-	router.HandlerFunc(http.MethodGet, addBlock, exceptions.Middleware(h.TestError))
-	router.HandlerFunc(http.MethodPost, addBlock, exceptions.Middleware(h.NewBlock))
+	router.HandlerFunc(http.MethodGet, AddBlock,  middleware.Middleware(h.TestError, AddBlock))
+	router.HandlerFunc(http.MethodPost, AddBlock, middleware.Middleware(h.NewBlock,  AddBlock))
 }
 
 func (h *handler) GetAllBlocks(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
@@ -49,7 +48,7 @@ func (h *handler) GetAllBlocks(w http.ResponseWriter, r *http.Request, params ht
 	w.WriteHeader(http.StatusOK)
 }
 
-//TODO логи со всех слоев. Валидация в мидлвар ?
+//TODO логи со всех слоев. Контекст проверить
 func (h *handler) NewBlock(w http.ResponseWriter, r *http.Request) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -57,13 +56,11 @@ func (h *handler) NewBlock(w http.ResponseWriter, r *http.Request) error {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil { return err }
 	json.Unmarshal(reqBody, &newBlock)
-	validate := validator.New()
-	if err := validate.Struct(newBlock); err != nil { return  err }
 
 	resp, err := h.blockService.AddNewBlock(ctx, &newBlock)
 	if err != nil { return err }
 
-	st := domains.NewStatusResponse(0, "", resp)
+	st := api.NewStatusResponse(0, "", resp, nil, "")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(st)
 
@@ -72,7 +69,7 @@ func (h *handler) NewBlock(w http.ResponseWriter, r *http.Request) error {
 
 func (h *handler) TestError(w http.ResponseWriter, r *http.Request) error {
 	//return exceptions.ErrNotFound
-	return exceptions.NewAppError(nil, "test", "test")
+	return api.NewStatusResponse(-1,"test",nil,nil,"")
 }
 
 
